@@ -36,11 +36,12 @@ int _tmain(int argc, _TCHAR* argv[])
 	int i;
 	int size;
 	SectorConfig config;
+	UINT32_T test;
 
 	sector_Create(2);
 
 	config.index=0;
-	config.type=(SECTOR_MAIN|SECTOR_START|SECTOR_FLASH);
+	config.type=(SECTOR_MAIN|SECTOR_START|SECTOR_CRC|SECTOR_FLASH);
 	config.ByteAligment=2;
 	
 	config.StartAddr=0;
@@ -51,7 +52,10 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	sector_Insert(&config);
 
+	sector_Malloc1(0,&test, 10 );
 
+	// ј∆ƒјя запись таблицы должна учитывать выравнивание
+	//–≈Ў»“№ Ё“” ѕ–ќЅЋ≈ћ”
 
 	return 0;
 

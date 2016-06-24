@@ -1,5 +1,8 @@
 #include "crc.h"
 
+
+static UINT16_T crc = 0xFFFF;
+
 /*
   Name  : CRC-8
   Poly  : 0x31    x^8 + x^5 + x^4 + 1
@@ -38,7 +41,7 @@ UINT8_T Crc8(UINT8_T *pcBlock, UINT8_T len)
 */
 UINT16_T Crc16(UINT8_T *pcBlock, UINT16_T len)
 {
-    UINT16_T crc = 0xFFFF;
+    //UINT16_T crc = 0xFFFF;
     UINT8_T i;
 
     while (len--)
@@ -49,4 +52,14 @@ UINT16_T Crc16(UINT8_T *pcBlock, UINT16_T len)
             crc = crc & 0x8000 ? (crc << 1) ^ 0x1021 : crc << 1;
     }
     return crc;
+}
+
+void Crc16_Clear()
+{
+	crc = 0xFFFF;
+}
+
+UINT16_T Crc16_Get()
+{
+	return crc;
 }
