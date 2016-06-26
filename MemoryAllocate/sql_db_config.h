@@ -31,20 +31,13 @@ typedef struct A_BLOCK_LINK
 {
 	UINT32_T pxNextFreeBlock;	/*<< The next free block in the list. */
 	UINT32_T xBlockSize;		/*<< The size of the free block. */
-};
-
-typedef struct A_BLOCK_LINK1
-{
-	//UINT16_T crc16;
-	UINT32_T pxNextFreeBlock;	/*<< The next free block in the list. */
-	UINT32_T xBlockSize;		/*<< The size of the free block. */
-}BlockLink_tt;
+}BlockLink_t;
 
 typedef struct BLOCK_LINK
 {
 	UINT32_T pxCurrentAddr;
 	struct A_BLOCK_LINK body;
-}BlockLink_t;
+}BlockLink;
 
 
 //#define MAX_SECTOR_COUNT 2
@@ -84,7 +77,6 @@ typedef struct DATA_BASE
 	UINT8_T		sector_counter;
 	
 	struct {
-		//UINT16_T FieldSize;				//размер (в байтах): (старшая тетрада)указатель,(младшая тетрада)размер сетора, (байт)тип сектора
 		UINT8_T  StartAddrLen;			//длина поля адреса
 		UINT8_T	 SectorSizeLen;			//длина поля размер
 		UINT8_T  Type;					//тип сектора

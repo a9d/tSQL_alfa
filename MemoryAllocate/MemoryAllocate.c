@@ -37,6 +37,9 @@ int _tmain(int argc, _TCHAR* argv[])
 	int size;
 	SectorConfig config;
 	UINT32_T test;
+	UINT32_T addr1,addr2,addr3,addr4,addr5;
+	UINT8_T buf[]={1,2,3,4,5,6};
+
 
 	sector_Create(2);
 
@@ -52,10 +55,30 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	sector_Insert(&config);
 
-	sector_Malloc1(0,&test, 10 );
+	sector_Malloc(0,&addr1,6);
+	sector_write(0,addr1,(void*)buf,6);
 
-	// ј∆ƒјя запись таблицы должна учитывать выравнивание
-	//–≈Ў»“№ Ё“” ѕ–ќЅЋ≈ћ”
+	sector_Malloc(0,&addr2,6);
+	sector_write(0,addr2,(void*)buf,6);
+
+	sector_Malloc(0,&addr3,6);
+	sector_write(0,addr3,(void*)buf,6);
+
+	sector_Malloc(0,&addr4,6);
+	sector_write(0,addr4,(void*)buf,6);
+
+	sector_Malloc(0,&addr5,6);
+	sector_write(0,addr5,(void*)buf,6);
+
+	sector_Free(0,addr2);
+	sector_Free(0,addr4);
+	sector_Free(0,addr5);
+	sector_Free(0,addr3); //работает неверно
+
+	sector_Malloc(0,&addr2,14);
+
+	sector_GetFreeSize(0);
+	sector_GetSegmentCounter(0);
 
 	return 0;
 
