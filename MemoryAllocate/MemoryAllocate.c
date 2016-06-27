@@ -8,6 +8,7 @@
 
 
 extern UINT8_T ucHeap[2048];
+extern UINT8_T ucHeap1[2048];
 //параметры всех служебных структур заранее определены
 
 //SIZE_T xHeapStructSize;
@@ -39,6 +40,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	UINT32_T test;
 	UINT32_T addr1,addr2,addr3,addr4,addr5;
 	UINT8_T buf[]={1,2,3,4,5,6};
+	UINT32_T addr11;
 
 
 	sector_Create(2);
@@ -46,17 +48,33 @@ int _tmain(int argc, _TCHAR* argv[])
 	config.index=0;
 	config.type=(SECTOR_MAIN|SECTOR_START|SECTOR_CRC|SECTOR_FLASH);
 	config.ByteAligment=2;
-	
-	config.StartAddr=0;
+	config.StartAddr=10;
 	config.StartAddrLen=BYTES_2;
-
-	config.SectorSize=2048;
+	config.SectorSize=2000;
 	config.SectorSizeLen=BYTES_2;
 
+	sector_ConfigCheck(&config);	
 	sector_Insert(&config);
+	sector_GetSectorConfig(0,&config);
+
+	//
+	config.index=1;
+	config.type=(SECTOR_EEPROM);
+	config.ByteAligment=1;
+	config.StartAddr=0;
+	config.StartAddrLen=BYTES_4;
+	config.SectorSize=2000;
+	config.SectorSizeLen=BYTES_4;
+
+	sector_ConfigCheck(&config);
+	sector_Insert(&config);
+	sector_GetSectorConfig(1,&config);
 
 	sector_Malloc(0,&addr1,6);
 	sector_write(0,addr1,(void*)buf,6);
+
+	sector_Malloc(1,&addr11,6);
+	sector_write(1,addr11,(void*)buf,6);
 
 	sector_Malloc(0,&addr2,6);
 	sector_write(0,addr2,(void*)buf,6);
@@ -73,12 +91,15 @@ int _tmain(int argc, _TCHAR* argv[])
 	sector_Free(0,addr2);
 	sector_Free(0,addr4);
 	sector_Free(0,addr5);
-	sector_Free(0,addr3); //работает неверно
+	sector_Free(0,addr3); 
 
-	sector_Malloc(0,&addr2,14);
+	//sector_Malloc(0,&addr2,14);
 
 	sector_GetFreeSize(0);
-	sector_GetSegmentCounter(0);
+	//sector_GetSegmentCounter(0);
+
+	sector_GetFreeSize(1);
+	//sector_GetSegmentCounter(1);
 
 	return 0;
 

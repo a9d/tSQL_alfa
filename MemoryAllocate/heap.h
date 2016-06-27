@@ -5,6 +5,7 @@
 #include "portable.h"
 #include "heap_hal.h"
 #include "crc.h"
+#include "sql_db_config.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -18,16 +19,25 @@ UINT8_T		sector_Create(UINT8_T count);				//+
 UINT8_T		sector_Insert(SectorConfig* config);		//+
 
 UINT32_T	sector_GetFreeSize(UINT8_T index);			//+
-UINT32_T	sector_GetSegmentCounter(UINT8_T index);	//+
 
-//добавить функцию освобождени€ зан€тых ресурсов
+#if (configUSE_SegmentCounter==TRUE)
+UINT32_T	sector_GetSegmentCounter(UINT8_T index);	//+
+#endif
+
+UINT8_T		sector_ConfigCheck(SectorConfig* config);  //+
+
+void		sector_ResourceFree();		//+
 
 //удалить сектор
-UINT8_T sector_Delete(UINT8_T index); //очистить поле type
+UINT8_T sector_Delete(UINT8_T index); //очистить поле type ,remalloc
 //открыть
-UINT8_T sector_Open();
+UINT8_T sector_Open(); //открыть сектор main . ѕодготовить все сектора к работе
 //закрыть бд
-UINT8_T sector_Close(); //сохранить структуру db
+UINT8_T sector_Close(); //сохранить структуру db. ќсвободить ресурсы
+//вернуть конфигурацию сектора
+UINT8_T sector_GetSectorConfig(UINT8_T index, SectorConfig* config);
+
+//добавление нового сектора, сохранение таблицы и открытие заново , remalloc
 
 #ifdef  __cplusplus
 }

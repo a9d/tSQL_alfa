@@ -2,7 +2,8 @@
 #include "portable.h"
 #include "sql_db_config.h"
 
-UINT8_T ucHeap[2048];
+UINT8_T ucHeap[2000];
+UINT8_T ucHeap1[2000];
 
 /*-----------------------------------------------------------*/
 UINT8_T sector_write(UINT8_T sector, UINT32_T addr, void *data, UINT16_T size)
@@ -16,8 +17,12 @@ UINT8_T sector_write(UINT8_T sector, UINT32_T addr, void *data, UINT16_T size)
 			*(ucHeap+addr+i)=*((UINT8_T*)data+i);
 		}
 	}
-	else
+	else if(sector==1)
 	{
+		for(i=0;i<size;i++ )
+		{
+			*(ucHeap1+addr+i)=*((UINT8_T*)data+i);
+		}
 	}
 
 	return ERR_OK;
@@ -35,8 +40,12 @@ UINT8_T sector_read(UINT8_T sector, UINT32_T addr, void *data, UINT16_T size)
 			*((UINT8_T*)data+i)=*(ucHeap+addr+i);
 		}
 	}
-	else
+	else if(sector==1)
 	{
+		for(i=0;i<size;i++ )
+		{
+			*((UINT8_T*)data+i)=*(ucHeap1+addr+i);
+		}
 	}
 
 	return ERR_OK;

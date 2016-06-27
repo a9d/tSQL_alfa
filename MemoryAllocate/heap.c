@@ -3,9 +3,6 @@
 #include "heap.h"
 #include "sql_db_config.h"
 
-/* Assumes 8bit bytes! */
-//#define heapBITS_PER_BYTE		( ( UINT8_T ) 8 )
-
 /*-----------------------------------------------------------*/
 
 /*
@@ -14,184 +11,20 @@
  * the block in front it and/or the block behind it if the memory blocks are
  * adjacent to each other.
  */
-//static void prvInsertBlockIntoFreeList( BlockLink_t *pxBlockToInsert );
+UINT8_T prvInsertBlockIntoFreeList(UINT8_T index, BlockLink *pxBlockToInsert );
 
 extern void ApplicationSectorPrepareHook( void ); //подготовка всех секторов
 extern void ApplicationSectorStartHook(UINT8_T index, UINT32_T start_addr,UINT32_T size); //подготовка сектора
 
-/////vApplicationMallocFailedHook
-///*-----------------------------------------------------------*/
-//
-///* The size of the structure placed at the beginning of each allocated memory
-//block must by correctly byte aligned. */
-//static SIZE_T xHeapStructSize;
-//
-///* Block sizes must not get too small. */
-//static SIZE_T minimum_block_size;
-//
-///* Create a couple of list links to mark the start and end of the list. */
-////static BlockLink_t xStart, pxEnd;
-//
-///* Keeps track of the number of free bytes remaining, but says nothing about
-//fragmentation. */
-//static UINT32_T xFreeBytesRemaining = 0U;
-//static UINT32_T xSegmentCounter = 0U;
-//
-///* Gets set to the top bit of an size_t type.  When this bit in the xBlockSize
-//member of an BlockLink_t structure is set then the block belongs to the
-//application.  When the bit is free the block is still part of the free heap
-//space. */
-//static SIZE_T xBlockAllocatedBit = 0U;
-//
-//UINT16_T byte_aligment;
-//
-//static	UINT8_T malloc_init_state=FALSE;
-
+/*-----------------------------------------------------------*/
 
 //---------------------------- NEW -------------------------------------------
-UINT8_T prvInsertBlockIntoFreeList(UINT8_T index, BlockLink *pxBlockToInsert );
+
 UINT8_T WriteBlockLink(UINT8_T index, BlockLink *bl);
 UINT8_T ReadBlockLink(UINT8_T index, BlockLink *bl);
 
-DataBase *sl;						//описание секторов базы данных
-BlockLink *xStart, *pxEnd;	//заголовки сегментов
-
-
-/*-----------------------------------------------------------*/
-//UINT32_T sector_Malloc( SIZE_T xWantedSize )
-//{
-//BlockLink_t pxBlock, *pxPreviousBlock, pxNewBlockLink; 
-//UINT32_T pvReturn = 0;
-//
-//	/* If this is the first call to malloc then the heap will require
-//	initialisation to setup the list of free blocks. */
-//	if(malloc_init_state==FALSE)
-//	{
-//		return 0;
-//	}
-//
-//	/* The wanted size is increased so it can contain a BlockLink_t
-//	structure in addition to the requested amount of bytes. */
-//	if( xWantedSize > 0 )
-//	{
-//		xWantedSize += xHeapStructSize;
-//
-//		/* Ensure that blocks are always aligned to the required number
-//		of bytes. */
-//		if( ( xWantedSize & (byte_aligment-1) ) != 0x00 )
-//		{
-//			/* Byte alignment required. */
-//			xWantedSize += ( byte_aligment - ( xWantedSize & (byte_aligment-1) ) ) ;
-//		}
-//	}
-//
-//	if( ( xWantedSize > 0 ) && ( xWantedSize <= xFreeBytesRemaining ) )
-//	{
-//		/* Traverse the list from the start	(lowest address) block until
-//		one	of adequate size is found. */
-//		pxPreviousBlock = &xStart;
-//			
-//		sector_read(0,xStart.body.pxNextFreeBlock,(void*)&pxBlock.body,xHeapStructSize);
-//		pxBlock.pxCurrentAddr=xStart.body.pxNextFreeBlock;
-//
-//		while((pxBlock.body.xBlockSize<xWantedSize)&&(pxBlock.body.pxNextFreeBlock!=0))
-//		{
-//			pxPreviousBlock = &pxBlock;
-//
-//			pxBlock.pxCurrentAddr=pxBlock.body.pxNextFreeBlock;
-//			sector_read(0,pxBlock.pxCurrentAddr,(void*)&pxBlock.body,xHeapStructSize);;
-//		}
-//
-//		/* If the end marker was reached then a block of adequate size
-//		was	not found. */
-//		if(pxBlock.pxCurrentAddr!=pxEnd.pxCurrentAddr)
-//		{
-//			/* Return the memory space pointed to - jumping over the
-//			BlockLink_t structure at its start. */
-//			pvReturn = pxPreviousBlock->body.pxNextFreeBlock+xHeapStructSize;
-//
-//			/* This block is being returned for use so must be taken out
-//			of the list of free blocks. */
-//			pxPreviousBlock->body.pxNextFreeBlock=pxBlock.body.pxNextFreeBlock;
-//			sector_write(0,pxPreviousBlock->pxCurrentAddr,(void*)&pxPreviousBlock->body,xHeapStructSize,byte_aligment);
-//
-//			/* If the block is larger than required it can be split into
-//			two. */
-//			if( ( pxBlock.body.xBlockSize - xWantedSize ) > minimum_block_size)		
-//			{
-//				/* This block is to be split into two.  Create a new
-//				block following the number of bytes requested. The void
-//				cast is used to prevent byte alignment warnings from the
-//				compiler. */
-//				pxNewBlockLink.pxCurrentAddr=pxBlock.pxCurrentAddr+xWantedSize;
-//
-//				/* Calculate the sizes of two blocks split from the
-//				single block. */
-//				pxNewBlockLink.body.xBlockSize=pxBlock.body.xBlockSize-xWantedSize;
-//				pxNewBlockLink.body.pxNextFreeBlock=0;
-//
-//				pxBlock.body.xBlockSize=xWantedSize;
-//				//writeMalloc(0, 0, pxBlock.pxCurrentAddr, (void*)&pxBlock.body,xHeapStructSize);
-//
-//				/* Insert the new block into the list of free blocks. */
-//				prvInsertBlockIntoFreeList(&pxNewBlockLink);
-//				xSegmentCounter++;
-//			}
-//
-//			xFreeBytesRemaining -= pxBlock.body.xBlockSize;
-//
-//			/* The block is being returned - it is allocated and owned
-//			by the application and has no "next" block. */
-//			pxBlock.body.xBlockSize |= xBlockAllocatedBit;									//!!!!!!!!!!!!!!!!!!!!
-//			pxBlock.body.pxNextFreeBlock = 0;
-//			sector_write(0, pxBlock.pxCurrentAddr, (void*)&pxBlock.body,xHeapStructSize,byte_aligment);
-//		}
-//	}
-//
-//	#if( configUSE_MALLOC_FAILED_HOOK == 1 )
-//	{
-//		if( pvReturn == NULL )
-//		{
-//			extern void vApplicationMallocFailedHook( void );
-//			vApplicationMallocFailedHook();
-//		}
-//	}
-//	#endif
-//
-//	return pvReturn;
-//}
-
-/*-----------------------------------------------------------*/
-//void sector_Free( UINT32_T pv )
-//{
-//UINT32_T puc=pv;
-//BlockLink_t pxLink;
-//
-//	if( pv != 0 )
-//	{
-//		/* The memory being freed will have an BlockLink_t structure immediately
-//		before it. */
-//		puc -= xHeapStructSize;
-//
-//		/* This casting is to keep the compiler from issuing warnings. */
-//		pxLink.pxCurrentAddr=puc;
-//		sector_read(0, puc, (void*)&pxLink.body, xHeapStructSize);
-//
-//		if( ( pxLink.body.xBlockSize & xBlockAllocatedBit ) != 0 )								//!!!!!!!!!!!!!!
-//		{
-//			if( pxLink.body.pxNextFreeBlock == 0 )
-//			{
-//				/* The block is being returned to the heap - it is no longer
-//				allocated. */
-//				pxLink.body.xBlockSize&= ~xBlockAllocatedBit;									//!!!!!!!!!!!!!!!!!
-//				
-//				/* Add this block to the list of free blocks. */
-//				xFreeBytesRemaining +=pxLink.body.xBlockSize;
-//				prvInsertBlockIntoFreeList(&pxLink);
-//			}
-//		}
-//	}
-//}
+DataBase *sl=NULL;	//описание секторов базы данных
+BlockLink *xStart;	//заголовки сегментов
 
 /*-----------------------------------------------------------*/
 UINT32_T sector_GetFreeSize(UINT8_T index)
@@ -200,135 +33,12 @@ UINT32_T sector_GetFreeSize(UINT8_T index)
 }
 
 /*-----------------------------------------------------------*/
+#if (configUSE_SegmentCounter==TRUE)
 UINT32_T sector_GetSegmentCounter(UINT8_T index)
 {
 	return sl->sector[index].xSegmentCounter;
 }
-
-/*-----------------------------------------------------------*/
-//void sector_Init(UINT32_T addr, UINT32_T size, UINT16_T aligment, UINT16_T aligment_mask)
-//{
-//BlockLink_t pxFirstFreeBlock;
-//BLOСK_OFFSET pucAlignedHeap;
-//BLOСK_OFFSET ulAddress;
-//BLOСK_SIZE	xTotalHeapSize;
-//
-//	byte_aligment=aligment;
-//
-//	xHeapStructSize	= ( sizeof( BLOСK_OFFSET ) + sizeof( BLOСK_SIZE ) + ( byte_aligment  -  1 ) ) & ~(byte_aligment-1);
-//	minimum_block_size =  xHeapStructSize<<1;
-//
-//	/* Ensure the heap starts on a correctly aligned boundary. */
-//	ulAddress = addr+xHeapStructSize;
-//	xTotalHeapSize = size-xHeapStructSize;
-//
-//	if( ( ulAddress & (byte_aligment-1) ) != 0 )
-//	{
-//		ulAddress += byte_aligment-1 ;
-//		ulAddress &=  ~( ( UINT32_T ) (byte_aligment-1) );
-//		xTotalHeapSize -= ulAddress - addr;
-//	}
-//
-//	pucAlignedHeap = ulAddress;
-//
-//	/* xStart is used to hold a pointer to the first item in the list of free
-//	blocks.  The void cast is used to prevent compiler warnings. */
-//	xStart.pxCurrentAddr=ulAddress-xHeapStructSize;
-//	xStart.body.pxNextFreeBlock = pucAlignedHeap;
-//	xStart.body.xBlockSize = 0;
-//	sector_write(0,xStart.pxCurrentAddr,(void*)&xStart.body,xHeapStructSize,byte_aligment);
-//
-//	/* pxEnd is used to mark the end of the list of free blocks and is inserted
-//	at the end of the heap space. */
-//	ulAddress = ( ( UINT32_T ) pucAlignedHeap ) + xTotalHeapSize;
-//	ulAddress -= xHeapStructSize;
-//	ulAddress &= ~( ( UINT32_T ) (byte_aligment-1));
-//	
-//	pxEnd.body.pxNextFreeBlock=0;
-//	pxEnd.body.xBlockSize=0;
-//	pxEnd.pxCurrentAddr=ulAddress;
-//	sector_write(0,pxEnd.pxCurrentAddr,(void*)&pxEnd.body, xHeapStructSize,byte_aligment);
-//	
-//	/* To start with there is a single free block that is sized to take up the
-//	entire heap space, minus the space taken by pxEnd. */
-//	pxFirstFreeBlock.pxCurrentAddr=pucAlignedHeap;
-//	pxFirstFreeBlock.body.xBlockSize= ulAddress - pxFirstFreeBlock.pxCurrentAddr;
-//	pxFirstFreeBlock.body.pxNextFreeBlock= pxEnd.pxCurrentAddr;
-//	sector_write(0,pxFirstFreeBlock.pxCurrentAddr,(void*)&pxFirstFreeBlock.body, xHeapStructSize,byte_aligment);
-//
-//	/* Only one block exists - and it covers the entire usable heap space. */
-//	xFreeBytesRemaining = pxFirstFreeBlock.body.xBlockSize;
-//
-//	xSegmentCounter=2;
-//
-//	/* Work out the position of the top bit in a size_t variable. */
-//	xBlockAllocatedBit = ( ( BLOСK_SIZE ) 1 ) << ( ( sizeof( BLOСK_SIZE ) * heapBITS_PER_BYTE ) - 1 );
-//
-//	malloc_init_state=TRUE;
-//}
-
-/*-----------------------------------------------------------*/
-//static void prvInsertBlockIntoFreeList( BlockLink_t *pxBlockToInsert )
-//{
-//BlockLink_t *pxIterator,pxIteratorBuf,pxBlockToInsertBuf;
-//
-//	/* Iterate through the list until a block is found that has a higher address
-//	than the block being inserted. */
-//	pxIterator = &xStart;
-//
-//	while(pxIterator->body.pxNextFreeBlock < pxBlockToInsert->pxCurrentAddr)
-//	{
-//		pxIteratorBuf.pxCurrentAddr=pxIterator->body.pxNextFreeBlock;
-//		sector_read(0, pxIteratorBuf.pxCurrentAddr, (void*)&pxIteratorBuf.body, xHeapStructSize);
-//		pxIterator = &pxIteratorBuf;
-//	}
-//
-//	/* Do the block being inserted, and the block it is being inserted after
-//	make a contiguous block of memory? */
-//	if((pxIterator->pxCurrentAddr+pxIterator->body.xBlockSize)==pxBlockToInsert->pxCurrentAddr)
-//	{
-//		pxIterator->body.xBlockSize+=pxBlockToInsert->body.xBlockSize;
-//		pxBlockToInsert = pxIterator;
-//
-//		xSegmentCounter--;
-//	}
-//
-//	/* Do the block being inserted, and the block it is being inserted before
-//	make a contiguous block of memory? */
-//	if((pxBlockToInsert->pxCurrentAddr+pxBlockToInsert->body.xBlockSize)==pxIterator->body.pxNextFreeBlock)
-//	{
-//		if(pxIterator->body.pxNextFreeBlock!=pxEnd.pxCurrentAddr)
-//		{
-//			/* Form one big block from the two blocks. */
-//			pxBlockToInsertBuf.pxCurrentAddr=pxIterator->body.pxNextFreeBlock;
-//			sector_read(0, pxBlockToInsertBuf.pxCurrentAddr, (void*)&pxBlockToInsertBuf.body, xHeapStructSize);
-//
-//			pxBlockToInsert->body.xBlockSize=pxBlockToInsertBuf.body.xBlockSize;
-//			pxBlockToInsert->body.pxNextFreeBlock=pxBlockToInsertBuf.body.pxNextFreeBlock;
-//
-//			xSegmentCounter--;
-//		}
-//		else
-//		{
-//			pxBlockToInsert->body.pxNextFreeBlock=pxEnd.pxCurrentAddr;
-//		}
-//	}
-//	else
-//	{
-//		pxBlockToInsert->body.pxNextFreeBlock=pxIterator->body.pxNextFreeBlock;
-//	}
-//
-//	/* If the block being inserted plugged a gab, so was merged with the block
-//	before and the block after, then it's pxNextFreeBlock pointer will have
-//	already been set, and should not be set here as that would make it point
-//	to itself. */
-//	if( pxIterator->pxCurrentAddr != pxBlockToInsert->pxCurrentAddr )
-//	{
-//		pxIterator->body.pxNextFreeBlock = pxBlockToInsert->pxCurrentAddr;
-//		sector_write(0, pxIterator->pxCurrentAddr, (void*)&pxIterator->body, xHeapStructSize,byte_aligment);
-//	}
-//	sector_write(0,pxBlockToInsert->pxCurrentAddr,(void*)&pxBlockToInsert->body,xHeapStructSize,byte_aligment);
-//}
+#endif
 
 /*-----------------------------------------------------------*/
 //создание сектора
@@ -340,14 +50,11 @@ UINT8_T sector_Create(UINT8_T count)
 
 	sl=(DataBase*)local_malloc(size); //размер структуры с описанием секторов
 	xStart=(BlockLink*)local_malloc(sizeof(BlockLink));
-	pxEnd=(BlockLink*)local_malloc(sizeof(BlockLink));
-	
 
-	if((sl==NULL) || (xStart==NULL) || (pxEnd==NULL))
+	if((sl==NULL) || (xStart==NULL) )
 	{
 		local_free((void*)sl);
 		local_free((void*)xStart);
-		local_free((void*)pxEnd);
 
 		return ERR_LOCAL_MALLOC;
 	}
@@ -361,6 +68,67 @@ UINT8_T sector_Create(UINT8_T count)
 	return ERR_OK;
 }
 
+/*-----------------------------------------------------------*/
+UINT8_T	sector_ConfigCheck(SectorConfig* config)
+{
+	if(config->ByteAligment==0)
+		return ERR_WRONG_ALIGMENT;
+
+	if(config->SectorSize==0)
+		return ERR_NO_FREE_SPACE;
+
+	if(config->SectorSizeLen==0)
+		return ERR_ADDR_LEN;
+
+	if(config->StartAddrLen==0)
+		return ERR_SIZE_LEN;
+
+	if( (config->type & SECTOR_MAIN) >0 )
+	{
+		if((config->type & SECTOR_READONLY) >0 )
+			return ERR_MAIN_READONLY;
+
+		if((config->type & 0xF0) ==0)
+			return ERR_MAIN_SECTOR_FREE;
+	}
+
+	if( (config->type & SECTOR_START) >0 )
+	{
+		if( (config->type & SECTOR_FREE) > 0)
+			return ERR_START_SECTOR_FREE;
+	}
+	
+	//выравнивание адреса
+	config->StartAddr+=(config->ByteAligment - 1);
+	config->StartAddr&=~(config->ByteAligment - 1);
+
+	//выравнивание размера
+	config->SectorSize&=~(config->ByteAligment - 1);
+
+	return ERR_OK;
+}
+
+UINT8_T sector_GetSectorConfig(UINT8_T index, SectorConfig* config)
+{
+	if(sl!=NULL)
+	{
+		if(index > (sl->sector_counter-1))
+			return ERR_WRONG_INDEX;
+		
+		config->index=index;
+		config->type=sl->sector[index].Type;
+		config->ByteAligment=sl->sector[index].ByteAligment;
+		config->StartAddr=sl->sector[index].StartAddr;
+		config->StartAddrLen=sl->sector[index].StartAddrLen;
+		config->SectorSize=(sl->sector[index].pxEnd_Addr+sl->sector[index].bl_size)-sl->sector[index].StartAddr;
+		config->SectorSizeLen=sl->sector[index].SectorSizeLen;
+
+		return ERR_OK;
+	}
+
+	return ERR_LOCAL_MALLOC;
+}
+
 //добавление описания новых секторов
 UINT8_T sector_Insert(SectorConfig* config)
 {
@@ -368,10 +136,7 @@ UINT8_T sector_Insert(SectorConfig* config)
 
 	if(sl!=NULL)
 	{
-		if(config->ByteAligment==0)
-			return ERR_WRONG_ALIGMENT;
-
-		if(config->index>(sl->sector_counter-1))
+		if(config->index > (sl->sector_counter-1))
 			return ERR_WRONG_INDEX;
 
 		//вызвать хук, если требуется подготовить сектор к работе
@@ -391,7 +156,6 @@ UINT8_T sector_Insert(SectorConfig* config)
 
 		sl->sector[config->index].StartAddr=config->StartAddr;
 		sl->sector[config->index].xStart_Addr=config->StartAddr;
-		sl->sector[config->index].SectorSize=config->SectorSize;
 		sl->sector[config->index].FreeBytesRemaining=config->SectorSize;
 		sl->sector[config->index].ByteAligment=config->ByteAligment;
 
@@ -472,11 +236,12 @@ UINT8_T sector_Init(UINT8_T index)
 		ulAddress -= sl->sector[index].bl_size;
 		ulAddress &= ~( (UINT32_T)(sl->sector[index].ByteAligment-1));
 
-		pxEnd->body.pxNextFreeBlock=0;
-		pxEnd->body.xBlockSize=0;
+		//записать pxEnd используя буффер pxFirstFreeBlock
+		pxFirstFreeBlock->body.pxNextFreeBlock=0;
+		pxFirstFreeBlock->body.xBlockSize=0;
 		sl->sector[index].pxEnd_Addr=ulAddress;
-		pxEnd->pxCurrentAddr=sl->sector[index].pxEnd_Addr;
-		err=WriteBlockLink(index,pxEnd);
+		pxFirstFreeBlock->pxCurrentAddr=sl->sector[index].pxEnd_Addr;
+		err=WriteBlockLink(index,pxFirstFreeBlock);
 
 		if(err==ERR_OK)
 		{
@@ -493,7 +258,9 @@ UINT8_T sector_Init(UINT8_T index)
 				/* Only one block exists - and it covers the entire usable heap space. */
 				sl->sector[index].FreeBytesRemaining = pxFirstFreeBlock->body.xBlockSize;
 
+				#if (configUSE_SegmentCounter==TRUE)
 				sl->sector[index].xSegmentCounter=3;
+				#endif
 			}
 		}
 	}
@@ -692,7 +459,9 @@ UINT8_T	sector_Malloc(UINT8_T index,UINT32_T *addr, UINT32_T xWantedSize )
 			if(err!=ERR_OK)
 				goto exit;
 
+			#if (configUSE_SegmentCounter==TRUE)
 			sl->sector[index].xSegmentCounter++;
+			#endif
 		}
 
 		sl->sector[index].FreeBytesRemaining -= pxBlock->body.xBlockSize;
@@ -731,6 +500,12 @@ UINT8_T prvInsertBlockIntoFreeList(UINT8_T index, BlockLink *pxBlockToInsert )
 
 	memset((void*)pxBlockToInsertBuf,0x00,sizeof(BlockLink));
 
+	//чтение сектора xStart
+	xStart->pxCurrentAddr=sl->sector[index].xStart_Addr;
+	err=ReadBlockLink(index, xStart);
+	if(err!=ERR_OK)
+		goto exit;
+
 	/* Iterate through the list until a block is found that has a higher address
 	than the block being inserted. */
 	pxIterator = xStart;
@@ -745,19 +520,22 @@ UINT8_T prvInsertBlockIntoFreeList(UINT8_T index, BlockLink *pxBlockToInsert )
 
 	/* Do the block being inserted, and the block it is being inserted after
 	make a contiguous block of memory? */
-	if( (pxIterator->pxCurrentAddr + pxIterator->body.pxNextFreeBlock ) == pxBlockToInsert->pxCurrentAddr )
+	if( (pxIterator->pxCurrentAddr + pxIterator->body.xBlockSize ) == pxBlockToInsert->pxCurrentAddr )
 	{
 		pxIterator->body.xBlockSize+=pxBlockToInsert->body.xBlockSize;
 		pxBlockToInsert = pxIterator;
 
+		#if (configUSE_SegmentCounter==TRUE)
 		sl->sector[index].xSegmentCounter--;
+		#endif
 	}
 
 	/* Do the block being inserted, and the block it is being inserted before
 	make a contiguous block of memory? */
 	if((pxBlockToInsert->pxCurrentAddr+pxBlockToInsert->body.xBlockSize)==pxIterator->body.pxNextFreeBlock)
 	{
-		if(pxIterator->body.pxNextFreeBlock!=pxEnd->pxCurrentAddr)
+		//if(pxIterator->body.pxNextFreeBlock!=pxEnd->pxCurrentAddr) //ошибка!
+		if(pxIterator->body.pxNextFreeBlock!=sl->sector[index].pxEnd_Addr)
 		{
 			/* Form one big block from the two blocks. */
 			pxBlockToInsertBuf->pxCurrentAddr=pxIterator->body.pxNextFreeBlock;
@@ -768,11 +546,13 @@ UINT8_T prvInsertBlockIntoFreeList(UINT8_T index, BlockLink *pxBlockToInsert )
 			pxBlockToInsert->body.xBlockSize=pxBlockToInsertBuf->body.xBlockSize;
 			pxBlockToInsert->body.pxNextFreeBlock=pxBlockToInsertBuf->body.pxNextFreeBlock;
 
+			#if (configUSE_SegmentCounter==TRUE)
 			sl->sector[index].xSegmentCounter--;
+			#endif
 		}
 		else
 		{
-			pxBlockToInsert->body.pxNextFreeBlock=pxEnd->pxCurrentAddr;
+			pxBlockToInsert->body.pxNextFreeBlock=sl->sector[index].pxEnd_Addr;//pxEnd->pxCurrentAddr;
 		}
 	}
 	else
@@ -849,6 +629,12 @@ exit:
 	local_free((void*)pxLink);
 
 	return err;
+}
+
+void sector_ResourceFree()
+{
+	local_free((void*)sl);
+	local_free((void*)xStart);
 }
 
 ////удалить сектор
