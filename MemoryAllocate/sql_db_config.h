@@ -27,6 +27,9 @@ extern "C" {
 #define ERR_START_SECTOR_FREE	15
 #define ERR_ADDR_LEN			16
 #define ERR_SIZE_LEN			17
+#define ERR_SECTOR_FREE			18
+#define ERR_SL_NULL				19
+#define ERR_NO_MAIN				20
 
 
 #define configUSE_SegmentCounter FALSE
@@ -72,26 +75,23 @@ typedef struct BLOCK_LINK
 //#define SECTOR_SIZE		(sizeof(UINT16_T)+sizeof(BLOСK_OFFSET)+2*(BLOCK_LINK_SIZE)+2*sizeof(BLOСK_SIZE)+sizeof(UINT16_T))
 //#define DB_STRUCT_SIZE	sizeof(UINT8_T)+sizeof(UINT8_T)+(SECTOR_SIZE)*MAX_SECTOR_COUNT
 
-#define DB_HEADER_SIZE  (sizeof(UINT16_T)+sizeof(UINT8_T))
-#define BLOCK_LINK_SIZE (2*sizeof(UINT32_T))
-
-
-#if (configUSE_SegmentCounter==TRUE)
-	#define SECTOR_SIZE		(5*sizeof(UINT8_T)+5*sizeof(UINT32_T))
-#else
-	#define SECTOR_SIZE		(5*sizeof(UINT8_T)+4*sizeof(UINT32_T))
-#endif
+//#define DB_HEADER_SIZE  (sizeof(UINT16_T)+sizeof(UINT8_T))
+//#define BLOCK_LINK_SIZE (2*sizeof(UINT32_T))
+//
+//
+//#if (configUSE_SegmentCounter==TRUE)
+//	#define SECTOR_SIZE		(5*sizeof(UINT8_T)+5*sizeof(UINT32_T))
+//#else
+//	#define SECTOR_SIZE		(5*sizeof(UINT8_T)+4*sizeof(UINT32_T))
+//#endif
 
 //#if( configUSE_MALLOC_FAILED_HOOK == 1 )
 //#endif
 
 
-typedef struct DATA_BASE
+
+typedef struct A_SECTOR_INFO
 {
-	UINT16_T	crc16; //генерить перед сохранением
-	UINT8_T		sector_counter;
-	
-	struct {
 		UINT8_T  StartAddrLen;			//длина поля адреса
 		UINT8_T	 SectorSizeLen;			//длина поля размер
 		UINT8_T  Type;					//тип сектора
@@ -106,8 +106,15 @@ typedef struct DATA_BASE
 
 		UINT32_T xStart_Addr;			//указатель на голову
 		UINT32_T pxEnd_Addr;			//указатель на хвост
-	}sector[];
-}DataBase;
+}SectorInfo;
+
+typedef struct SECTOR_LIST
+{
+	UINT16_T	crc16; //генерить перед сохранением
+	UINT8_T		sector_counter;
+	
+	struct A_SECTOR_INFO *sector;
+}SectorList;
 
 //добавить CRC
 // SectorSize=FreeBytesRemaining=xSegmentCounter

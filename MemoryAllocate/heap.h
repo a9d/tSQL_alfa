@@ -28,16 +28,21 @@ UINT8_T		sector_ConfigCheck(SectorConfig* config);  //+
 
 void		sector_ResourceFree();		//+
 
-//удалить сектор
-UINT8_T sector_Delete(UINT8_T index); //очистить поле type ,remalloc
-//открыть
-UINT8_T sector_Open(); //открыть сектор main . Подготовить все сектора к работе
-//закрыть бд
-UINT8_T sector_Close(); //сохранить структуру db. Освободить ресурсы
-//вернуть конфигурацию сектора
-UINT8_T sector_GetSectorConfig(UINT8_T index, SectorConfig* config);
+UINT8_T		sector_GetSectorConfig(UINT8_T index, SectorConfig* config); //вернуть конфигурацию сектора //+
 
-//добавление нового сектора, сохранение таблицы и открытие заново , remalloc
+UINT8_T sector_Close(); //сохранить структуру db. Освободить ресурсы
+
+UINT8_T sector_MainSave(); //сохранить сектор main
+
+//удалить сектор
+UINT8_T sector_Delete(UINT8_T index); //очистить поле type //+
+
+//открыть
+
+
+UINT8_T sector_AddNewSector(SectorConfig* config);//добавление нового сектора, сохранение таблицы и открытие заново
+
+UINT8_T sector_Open(UINT8_T index, UINT8_T Aligment ,UINT32_T addr); //открыть сектор main . Подготовить все сектора к работе
 
 #ifdef  __cplusplus
 }

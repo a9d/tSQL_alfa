@@ -27,10 +27,16 @@ void ApplicationSectorPrepareHook(void)
 	//подготовка памяти к размещению секторов
 }
 
-void ApplicationSectorStartHook(UINT8_T index, UINT32_T start_addr,UINT32_T size)
+void ApplicationSectorOpenHook(UINT8_T index, UINT32_T start_addr,UINT32_T size)
 {
 	//подготовка сектора
 }
+
+void ApplicationSectorDelete(UINT8_T index, UINT32_T start_addr, UINT32_T size)
+{
+	//удаление заданного сектора
+}
+
 
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -46,9 +52,9 @@ int _tmain(int argc, _TCHAR* argv[])
 	sector_Create(2);
 
 	config.index=0;
-	config.type=(SECTOR_MAIN|SECTOR_START|SECTOR_CRC|SECTOR_FLASH);
+	config.type=(SECTOR_MAIN|SECTOR_FLASH);
 	config.ByteAligment=2;
-	config.StartAddr=10;
+	config.StartAddr=0;
 	config.StartAddrLen=BYTES_2;
 	config.SectorSize=2000;
 	config.SectorSizeLen=BYTES_2;
@@ -67,31 +73,31 @@ int _tmain(int argc, _TCHAR* argv[])
 	config.SectorSizeLen=BYTES_4;
 
 	sector_ConfigCheck(&config);
-	sector_Insert(&config);
+	sector_Insert(&config); //портится куча
 	sector_GetSectorConfig(1,&config);
 
-	sector_Malloc(0,&addr1,6);
-	sector_write(0,addr1,(void*)buf,6);
+	//sector_Malloc(0,&addr1,6);
+	//sector_write(0,addr1,(void*)buf,6);
 
 	sector_Malloc(1,&addr11,6);
 	sector_write(1,addr11,(void*)buf,6);
 
-	sector_Malloc(0,&addr2,6);
-	sector_write(0,addr2,(void*)buf,6);
+	//sector_Malloc(0,&addr2,6);
+	//sector_write(0,addr2,(void*)buf,6);
 
-	sector_Malloc(0,&addr3,6);
-	sector_write(0,addr3,(void*)buf,6);
+	//sector_Malloc(0,&addr3,6);
+	//sector_write(0,addr3,(void*)buf,6);
 
-	sector_Malloc(0,&addr4,6);
-	sector_write(0,addr4,(void*)buf,6);
+	//sector_Malloc(0,&addr4,6);
+	//sector_write(0,addr4,(void*)buf,6);
 
-	sector_Malloc(0,&addr5,6);
-	sector_write(0,addr5,(void*)buf,6);
+	//sector_Malloc(0,&addr5,6);
+	//sector_write(0,addr5,(void*)buf,6);
 
-	sector_Free(0,addr2);
-	sector_Free(0,addr4);
-	sector_Free(0,addr5);
-	sector_Free(0,addr3); 
+	//sector_Free(0,addr2);
+	//sector_Free(0,addr4);
+	//sector_Free(0,addr5);
+	//sector_Free(0,addr3); 
 
 	//sector_Malloc(0,&addr2,14);
 
@@ -99,77 +105,23 @@ int _tmain(int argc, _TCHAR* argv[])
 	//sector_GetSegmentCounter(0);
 
 	sector_GetFreeSize(1);
+
+	config.index=2;
+	config.type=(SECTOR_FLASH);
+	config.ByteAligment=2;
+	config.StartAddr=0;
+	config.StartAddrLen=BYTES_2;
+	config.SectorSize=2000;
+	config.SectorSizeLen=BYTES_2;
+	sector_ConfigCheck(&config);
+
+	//sector_Delete(1);
+	//sector_AddNewSector(&config);
+
+	sector_Close();
+	sector_Open(0, 2 ,0);
 	//sector_GetSegmentCounter(1);
 
 	return 0;
-
-	//int i;
-	//UINT32_T addr1,addr2,addr3,addr4,addr5;
-	//UINT16_T test;
-
-	//DataBase g;
-
-	////g.sector[0].i;
-
-	//prvHeapInit((UINT32_T)0,200,1,0);
-
-	//addr1 = pvPortMalloc( 5 );
-	//
-	//for(i=0;i<5;i++)
-	//{
-	//	test=i+1;
-	//	heap_write(0, addr1+i, &test, 1,1);
-	//}
-
-	//addr2 = pvPortMalloc( 5 );
-
-	//for(i=0;i<5;i++)
-	//{
-	//	test=i+1;
-	//	heap_write(0, addr2+i, &test, 1,1);
-	//}
-
-	//addr3 = pvPortMalloc( 5 );
-
-	//for(i=0;i<5;i++)
-	//{
-	//	test=i+1;
-	//	heap_write(0, addr3+i, &test, 1,1);
-	//}
-
-	//addr4 = pvPortMalloc( 5 );
-
-	//for(i=0;i<5;i++)
-	//{
-	//	test=i+1;
-	//	heap_write(0, addr4+i, &test, 1,1);
-	//}
-
-	//addr5 = pvPortMalloc( 5 );
-
-	//for(i=0;i<5;i++)
-	//{
-	//	test=i+1;
-	//	heap_write(0, addr5+i, &test, 1,1);
-	//}
-
-
-	//vPortFree(addr2);
-	//vPortFree(addr4);
-	//vPortFree(addr5);
-	//vPortFree(addr3);
-
-	//addr2 =pvPortMalloc( 15 );
-
-	//for(i=0;i<15;i++)
-	//{
-	//	test=i+1;
-	//	heap_write(0, addr2+i, &test, 1,1);
-	//}
-
-	//xPortGetFreeHeapSize();
-	////xPortGetMinimumEverFreeHeapSize();
-
-	//return 0;
 }
 
