@@ -9,6 +9,8 @@ extern "C" {
 #endif
 
 
+//файл переделать 
+
 #define ERR_OK					0
 #define ERR_LOCAL_MALLOC		1
 #define ERR_WRONG_ALIGMENT		2
@@ -34,22 +36,7 @@ extern "C" {
 
 #define configUSE_SegmentCounter FALSE
 
-/* Define the linked list structure.  This is used to link free blocks in order
-of their memory address. */
-typedef struct A_BLOCK_LINK
-{
-	UINT32_T pxNextFreeBlock;	/*<< The next free block in the list. */
-	UINT32_T xBlockSize;		/*<< The size of the free block. */
-}BlockLink_t;
 
-typedef struct BLOCK_LINK
-{
-	UINT32_T pxCurrentAddr;
-	struct A_BLOCK_LINK body;
-}BlockLink;
-
-
-//#define MAX_SECTOR_COUNT 2
 #define SECTOR_FREE		0x00
 #define SECTOR_FLASH	0x01
 #define SECTOR_EEPROM	0x02
@@ -71,25 +58,6 @@ typedef struct BLOCK_LINK
 //3=	8 388 607
 //4=2 147 483 647
 
-//#define BLOCK_LINK_SIZE sizeof(BLOСK_OFFSET)+sizeof(BLOСK_OFFSET)+sizeof(BLOСK_SIZE)
-//#define SECTOR_SIZE		(sizeof(UINT16_T)+sizeof(BLOСK_OFFSET)+2*(BLOCK_LINK_SIZE)+2*sizeof(BLOСK_SIZE)+sizeof(UINT16_T))
-//#define DB_STRUCT_SIZE	sizeof(UINT8_T)+sizeof(UINT8_T)+(SECTOR_SIZE)*MAX_SECTOR_COUNT
-
-//#define DB_HEADER_SIZE  (sizeof(UINT16_T)+sizeof(UINT8_T))
-//#define BLOCK_LINK_SIZE (2*sizeof(UINT32_T))
-//
-//
-//#if (configUSE_SegmentCounter==TRUE)
-//	#define SECTOR_SIZE		(5*sizeof(UINT8_T)+5*sizeof(UINT32_T))
-//#else
-//	#define SECTOR_SIZE		(5*sizeof(UINT8_T)+4*sizeof(UINT32_T))
-//#endif
-
-//#if( configUSE_MALLOC_FAILED_HOOK == 1 )
-//#endif
-
-
-
 typedef struct A_SECTOR_INFO
 {
 		UINT8_T  StartAddrLen;			//длина поля адреса
@@ -98,7 +66,7 @@ typedef struct A_SECTOR_INFO
 		UINT8_T  bl_size;				//длина структуры блок линк с учетом выравнивания
 		UINT8_T  ByteAligment;			//выравнивание ,всегда больше нуля
 		UINT32_T StartAddr;				//смещение на сектор
-		UINT32_T FreeBytesRemaining;	//остаток
+		UINT32_T FreeBytesRemaining;	//колличество свободных байт
 
 		#if (configUSE_SegmentCounter==TRUE)
 		UINT32_T xSegmentCounter;		//колличество сегментов
@@ -108,32 +76,28 @@ typedef struct A_SECTOR_INFO
 		UINT32_T pxEnd_Addr;			//указатель на хвост
 }SectorInfo;
 
+//список секторов
 typedef struct SECTOR_LIST
 {
-	UINT16_T	crc16; //генерить перед сохранением
-	UINT8_T		sector_counter;
+	UINT16_T	crc16;				//генерить перед сохранением
+	UINT8_T		sector_counter;		//колличество секторов
+	UINT8_T		crc;				//инвертированное поле sector_counter
 	
-	struct A_SECTOR_INFO *sector;
+	struct A_SECTOR_INFO *sector;	//список секторов
 }SectorList;
 
-//добавить CRC
-// SectorSize=FreeBytesRemaining=xSegmentCounter
-// xStart_Addr=pxEnd_Addr=StartAddr
 
-
+//описание сектора
 typedef struct SECTOR_CONFIG
 {
-	UINT8_T	index;
-	UINT8_T type;
-	UINT8_T StartAddrLen;
-	UINT8_T SectorSizeLen;
-	UINT32_T StartAddr;
-	UINT32_T SectorSize;
-	UINT8_T ByteAligment;
+	UINT8_T	index;				//номер сектора
+	UINT8_T type;				//тип сектора
+	UINT8_T StartAddrLen;		//длина, в байтаз, поля адрес
+	UINT8_T SectorSizeLen;		//длина, в байтах, поля размер
+	UINT32_T StartAddr;			//адрес начала сектора с учетом выравнивания
+	UINT32_T SectorSize;		//размер сектора с учетом выравнивания
+	UINT8_T ByteAligment;		//смещение в секторе
 }SectorConfig;
-
-//SIZE_T xHeapStructSize;    // создать переменную после открытия БД UINT16_T
-//SIZE_T minimum_block_size; // просто умножить на 2 xHeapStructSize
 
 #ifdef  __cplusplus
 }

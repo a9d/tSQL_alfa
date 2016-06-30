@@ -6,21 +6,8 @@
 #include "sql_db_config.h"
 #include <memory.h>
 
-
 extern UINT8_T ucHeap[2048];
 extern UINT8_T ucHeap1[2048];
-//параметры всех служебных структур заранее определены
-
-//SIZE_T xHeapStructSize;
-//SIZE_T minimum_block_size; // просто умножить на 2 xHeapStructSize
-//BlockLink_t xStart;  
-//BlockLink_t pxEnd;
-//SIZE_T xFreeBytesRemaining;
-//SIZE_T xMinimumEverFreeBytesRemaining; //не сохранять
-//SIZE_T xSegmentCounter;
-//SIZE_T xBlockAllocatedBit ;
-//UINT16_T byte_aligment;
-
 
 void ApplicationSectorPrepareHook(void)
 {
@@ -49,10 +36,10 @@ int _tmain(int argc, _TCHAR* argv[])
 	UINT32_T addr11;
 
 
-	sector_Create(2);
+	sector_Create(2,2);
 
 	config.index=0;
-	config.type=(SECTOR_MAIN|SECTOR_FLASH);
+	config.type=(SECTOR_MAIN|SECTOR_START|SECTOR_FLASH);
 	config.ByteAligment=2;
 	config.StartAddr=0;
 	config.StartAddrLen=BYTES_2;
@@ -76,8 +63,8 @@ int _tmain(int argc, _TCHAR* argv[])
 	sector_Insert(&config); //портится куча
 	sector_GetSectorConfig(1,&config);
 
-	//sector_Malloc(0,&addr1,6);
-	//sector_write(0,addr1,(void*)buf,6);
+	sector_Malloc(0,&addr1,6);
+	sector_write(0,addr1,(void*)buf,6);
 
 	sector_Malloc(1,&addr11,6);
 	sector_write(1,addr11,(void*)buf,6);
@@ -116,11 +103,20 @@ int _tmain(int argc, _TCHAR* argv[])
 	sector_ConfigCheck(&config);
 
 	//sector_Delete(1);
-	//sector_AddNewSector(&config);
+	sector_AddNewSector(&config);
 
 	sector_Close();
 	sector_Open(0, 2 ,0);
 	//sector_GetSegmentCounter(1);
+
+	sector_Malloc(0,&addr2,6);
+	sector_write(0,addr2,(void*)buf,6);
+
+	sector_Free(0,addr1);
+
+	sector_Close();
+
+	//младшая часть CRC16 для защиты счетчика
 
 	return 0;
 }
